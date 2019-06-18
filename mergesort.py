@@ -1,46 +1,38 @@
 from random import randint
-class Merge_List:
-    def __init__(self, items = None, lismax, lismin):
-        self.items = items
-        self.max = self.items[len(self.items)]
-        self.min = self.items[0]
+import sys
+import re
 
-    def object_merge(self, list1, list2):
-        self.items = list1.items + list2.items
-        self.max = list2.max
-        self.min = list1.min
+def object_merge(list1, list2):
+    return list1 + list2
 
+def object_inner_merge(outer_list, inner_list):
+    # min_index = 0
+    # max_index = len(outer_list.items)
+    # while outer_list.items[min_index] < inner_list.min: #could use binary search to achieve this process
+    #     min_index += 1
+    # while outer_list.items[max_index] > inner_list.max: #could use binary search to achieve this process
+    #     max_index -= 1
+    min_index = binary_search(outer_list, inner_list[0])
+    max_index = binary_search(outer_list, inner_list[-1])
+    return outer_list[0:min_index] + merge_sorted_lists(outer_list[min_index: max_index], inner_list) + outer_list[max_index:]
+    
+def object_overlap_merge(left_list, right_list):
+    right_list_min_index = binary_search(left_list, right_list[0])
+    left_list_min_index = binary_search(right_list, left_list[-1])
+    left_overlap = left_list[right_list_min_index:]
+    right_overlap = right_list[:left_list_min_index]
+    overlap = merge_sorted_lists(left_overlap, right_overlap)  
+    return left_list[:right_list_min_index] + overlap + right_list[left_list_min_index:]
    
-    def object_inner_merge(self, outer_list, inner_list):
-        # min_index = 0
-        # max_index = len(outer_list.items)
-        # while outer_list.items[min_index] < inner_list.min: #could use binary search to achieve this process
-        #     min_index += 1
-        # while outer_list.items[max_index] > inner_list.max: #could use binary search to achieve this process
-        #     max_index -= 1
-        min_index = binary_search(outer_list.items, inner_list.min)
-        max_index = binary_search(outer_list.items, inner_list.max )
-        self.items = outer_list.items[0:min_index] + merge_sorted_lists(outer_list.items[min_index: max_index], inner_list.items) + outer_list.items[max_index:]
-        self.max = outer_list.max
-        self.min = outer_list.min
-    def object_overlap_merge(self, left_list, right_list):
-        right_list_min_index = binary_search(left_list.items, right_list.min)
-        left_list_min_index = binary_search(right_list.items, left_list.max)
-        left_overlap = left_list[right_list_min_index:]
-        right_overlap = right_list[:left_list_min_index]
-        overlap = merge_sorted_lists(left_overlap, right_overlap)  
-        self.items = left_list[:right_list_min_index] + overlap + right_list[left_list_min_index:]
-        self.max = right_list.max
-        self.min = left_list.min
 def merge_sorted_lists(list1, list2):
     reversed_list1 = list1
     reversed_list2 = list2
     reversed_list1.reverse()
     reversed_list2.reverse()
-    print(reversed_list1, reversed_list2)
+    #print(reversed_list1, reversed_list2)
     new_list = list()
     for i in range(len(list1)+ len(list2)):
-        print(new_list)
+       # print(new_list)
         
         if len(reversed_list1) != 0 and len(reversed_list2) != 0:
             if reversed_list1[-1] > reversed_list2[-1]:
@@ -86,49 +78,67 @@ def generate_random_sorted_list() -> list():
     return lis
 
 def merge(lis):
+    
     print("big list", lis)
-    
-    if type(lis) == list:
-        length_list = len(lis)
-    else:
-        length_list = len(lis.items)
-        lis = lis.items
-    
-    if length_list > 1:
-        print(lis)
+
+    if len(lis) > 1:
+        #print(lis)
         mid = len(lis)//2
-        lis1 = Merge_List(lis[:mid])
-        lis2 = Merge_List(lis[mid:])
+        lis1 = lis[:mid]
+        lis2 = lis[mid:]
+        
        
-        new_lis = Merge_List()
         
-        
-        if lis1.min > lis2.max:
-            new_lis.object_merge(merge(lis1), merge(lis2))
-        elif lis2.min > lis1.max:
-            new_lis.object_merge(merge(lis2), merge(lis1))
-        elif lis1.min > lis2.min and lis1.max < lis2.max:
-           new_lis.object_inner_merge(merge(lis2), merge(lis1))
-        elif lis2.min > lis1.min and lis2.max < lis1.max:
-            new_lis.object_inner_merge(merge(lis1), merge(lis2))
-        elif lis1.min < lis2.min and lis1.max > lis2.min: # all cases where lis1.max > lis2.max should be taken into account by previous clause, but keep aware
-            new_lis.object_overlap_merge(merge(lis1), merge(lis2))
+        new_lis = list()
+        new_lis1 = merge(lis1)
+        new_lis2 = merge(lis2)
+        new_lis1_min = new_lis1[0]
+        new_lis1_max = new_lis1[-1]
+        new_lis2_min = new_lis2[0]
+        new_lis2_max = new_lis2[-1]
+        print("lis1 %s \n lis2 %s" % (new_lis1, new_lis2))
+        print("lis1min %s lis1max %s lis2min %s lis2max %s" % (new_lis1_min, new_lis1_max, new_lis2_min, new_lis2_max))
+        if new_lis1_min >= new_lis2_max:
+            print(1)
+            new_lis = object_merge(new_lis2, new_lis1)
+        elif new_lis1_max <= new_lis2_min:
+            print(2)
+            new_lis = object_merge(new_lis1, new_lis2)
+        elif new_lis1_min >= new_lis2_min and new_lis1_max <= new_lis2_max:
+            print(3)
+            new_lis = object_inner_merge(new_lis2, new_lis1)
+        elif new_lis2_min >= new_lis1_min and new_lis2_max <= new_lis1_max:
+            print(4)
+            new_lis = object_inner_merge(new_lis1, new_lis2)
+        elif new_lis1_min < new_lis2_min and new_lis1_max > new_lis2_min: # all cases where lis1.max > lis2.max should be taken into account by previous clause, but keep aware
+            print(5)
+            new_lis = object_overlap_merge(new_lis1, new_lis2)
         else: 
-            new_lis.object_overlap_merge(merge(lis2), merge(lis1))
+            print(6)
+            new_lis = object_overlap_merge(new_lis2, new_lis1)
+        print("return list", new_lis)
         return new_lis
     else:
-        return Merge_List(lis)
+        print("return list", lis)
+        return lis
 
 def main():
-	lis = list()
-	for i in range(randint(0,5)):
-		lis.append(randint(0, 5))
+     
+    try:
+        lis = list(sys.argv[1])
+        lis = [x for x in lis[1:-2] if x.isdigit()]
+        print(lis)
+        print("hello")
+    except:
+        lis = list()
+        for i in range(randint(50,100)):
+            lis.append(randint(0, 9))
+    
+    # lis = [6, 5, 0]
+    # print(lis)
+    sorted_lis = merge(lis)
 
-	print(lis)
-
-	sorted_lis = merge(lis)
-
-	print(sorted_lis.items)
+    print(sorted_lis)
     #list1 =  [1, 8, 9, 10]
     # list1 = generate_random_sorted_list() 
     # #list2 = generate_random_sorted_list()
